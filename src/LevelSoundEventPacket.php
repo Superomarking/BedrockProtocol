@@ -28,11 +28,12 @@ class LevelSoundEventPacket extends DataPacket implements ClientboundPacket, Ser
 	public string $entityType = ":"; //???
 	public bool $isBabyMob = false; //...
 	public bool $disableRelativeVolume = false;
+	private int $actorUniqueId = -1;
 
 	/**
 	 * @generate-create-func
 	 */
-	public static function create(int $sound, Vector3 $position, int $extraData, string $entityType, bool $isBabyMob, bool $disableRelativeVolume) : self{
+	public static function create(int $sound, Vector3 $position, int $extraData, string $entityType, bool $isBabyMob, bool $disableRelativeVolume, int $actorUniqueId) : self{
 		$result = new self;
 		$result->sound = $sound;
 		$result->position = $position;
@@ -40,12 +41,15 @@ class LevelSoundEventPacket extends DataPacket implements ClientboundPacket, Ser
 		$result->entityType = $entityType;
 		$result->isBabyMob = $isBabyMob;
 		$result->disableRelativeVolume = $disableRelativeVolume;
+		$result->actorUniqueId = $actorUniqueId;
 		return $result;
 	}
 
 	public static function nonActorSound(int $sound, Vector3 $position, bool $disableRelativeVolume, int $extraData = -1) : self{
-		return self::create($sound, $position, $extraData, ":", false, $disableRelativeVolume);
+		return self::create($sound, $position, $extraData, ":", false, $disableRelativeVolume, -1);
 	}
+
+	public function getActorUniqueId() : int{ return $this->actorUniqueId; }
 
 	protected function decodePayload(PacketSerializer $in) : void{
 		$this->sound = $in->getUnsignedVarInt();
@@ -54,6 +58,7 @@ class LevelSoundEventPacket extends DataPacket implements ClientboundPacket, Ser
 		$this->entityType = $in->getString();
 		$this->isBabyMob = $in->getBool();
 		$this->disableRelativeVolume = $in->getBool();
+		$this->actorUniqueId = $in->getActorUniqueId();
 	}
 
 	protected function encodePayload(PacketSerializer $out) : void{
@@ -63,6 +68,7 @@ class LevelSoundEventPacket extends DataPacket implements ClientboundPacket, Ser
 		$out->putString($this->entityType);
 		$out->putBool($this->isBabyMob);
 		$out->putBool($this->disableRelativeVolume);
+		$out->putActorUniqueId($this->actorUniqueId);
 	}
 
 	public function handle(PacketHandlerInterface $handler) : bool{
